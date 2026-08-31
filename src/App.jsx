@@ -5,7 +5,10 @@ import QuotationForm from './components/QuotationForm'
 import { useAuth } from './context/useAuth'
 import {
   createQuotation,
+  deleteQuotation,
+  getQuotationById,
   getQuotations,
+  updateQuotation,
 } from './services/quotationService'
 
 function App() {
@@ -17,6 +20,13 @@ function App() {
   const [quotationsError, setQuotationsError] = useState('')
   const [quotationRefreshKey, setQuotationRefreshKey] = useState(0)
   const [selectedQuotationId, setSelectedQuotationId] = useState(null)
+  const [editingQuotationId, setEditingQuotationId] = useState(null)
+  const [editingQuotation, setEditingQuotation] = useState(null)
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [quotationToDelete, setQuotationToDelete] = useState(null)
+  const [deletingQuotation, setDeletingQuotation] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -54,12 +64,108 @@ function App() {
     }
   }, [user?.id, quotationRefreshKey])
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadQuotationForEdit() {
+      if (!editingQuotationId) {
+        return
+      }
+
+      setEditLoading(true)
+      setEditError('')
+      setEditingQuotation(null)
+
+      try {
+        const quotation = await getQuotationById(editingQuotationId)
+
+        if (!cancelled) {
+          setEditingQuotation(quotation)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setEditError(error.message || 'Quotation could not be found.')
+        }
+      } finally {
+        if (!cancelled) {
+          setEditLoading(false)
+        }
+      }
+    }
+
+    loadQuotationForEdit()
+
+    return () => {
+      cancelled = true
+    }
+  }, [editingQuotationId])
+
   async function handleSaveQuotation(quotation, items) {
     await createQuotation(quotation, items)
 
     setQuotationRefreshKey((currentKey) => currentKey + 1)
     setSuccessMessage('Quotation created successfully.')
     setShowQuotationForm(false)
+  }
+
+  async function handleUpdateQuotation(quotation, items) {
+    await updateQuotation(editingQuotationId, quotation, items)
+
+    setQuotationRefreshKey((currentKey) => currentKey + 1)
+    setSuccessMessage('Quotation updated successfully.')
+    setEditingQuotationId(null)
+    setEditingQuotation(null)
+  }
+
+  function handleStartEdit(quotationId) {
+    setSuccessMessage('')
+    setEditingQuotationId(quotationId)
+  }
+
+  function handleCancelEdit() {
+    setEditingQuotationId(null)
+    setEditingQuotation(null)
+    setEditError('')
+  }
+
+  function handleStartDelete(quotation) {
+    setDeleteError('')
+    setQuotationToDelete(quotation)
+  }
+
+  function handleCancelDelete() {
+    if (!deletingQuotation) {
+      setQuotationToDelete(null)
+      setDeleteError('')
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!quotationToDelete) {
+      return
+    }
+
+    setDeletingQuotation(true)
+    setDeleteError('')
+
+    try {
+      await deleteQuotation(quotationToDelete.id)
+
+      setQuotations((currentQuotations) =>
+        currentQuotations.filter(
+          (quotation) => quotation.id !== quotationToDelete.id,
+        ),
+      )
+      setQuotationRefreshKey((currentKey) => currentKey + 1)
+      setSuccessMessage(
+        `Quotation ${quotationToDelete.quotation_number} deleted successfully.`,
+      )
+      setQuotationToDelete(null)
+    } catch (error) {
+      setDeleteError(error.message || 'Failed to delete quotation.')
+    } finally {
+      setDeletingQuotation(false)
+    }
   }
 
   if (loading) {
@@ -103,6 +209,58 @@ function App() {
               onSave={handleSaveQuotation}
               onCancel={() => setShowQuotationForm(false)}
             />
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (editingQuotationId) {
+    return (
+      <main className="min-h-screen bg-gray-100 px-4 py-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+
+          <div className="rounded-xl bg-white p-6 shadow-sm md:p-8">
+            {editLoading && (
+              <p className="text-sm text-gray-500">Loading quotation...</p>
+            )}
+
+            {editError && (
+              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                Unable to load quotation: {editError}
+              </div>
+            )}
+
+            {editingQuotation && !editLoading && !editError && (
+              <>
+                <div className="mb-8">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Edit Quotation
+                  </h1>
+
+                  <p className="mt-2 text-sm text-gray-500">
+                    Update customer and product details for this quotation.
+                  </p>
+                </div>
+
+                <QuotationForm
+                  key={editingQuotationId}
+                  initialQuotation={editingQuotation}
+                  onSave={handleUpdateQuotation}
+                  onCancel={handleCancelEdit}
+                  submitLabel="Update Quotation"
+                />
+              </>
+            )}
           </div>
         </div>
       </main>
@@ -223,6 +381,20 @@ function App() {
                         >
                           View
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(quotation.id)}
+                          className="ml-3 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStartDelete(quotation)}
+                          className="ml-3 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -232,6 +404,61 @@ function App() {
           )}
         </section>
       </div>
+
+      {quotationToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-quotation-title"
+        >
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h2
+              id="delete-quotation-title"
+              className="text-lg font-semibold text-gray-900"
+            >
+              Delete quotation?
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              You are about to delete quotation{' '}
+              <span className="font-medium text-gray-900">
+                {quotationToDelete.quotation_number}
+              </span>{' '}
+              for{' '}
+              <span className="font-medium text-gray-900">
+                {quotationToDelete.customer_name}
+              </span>
+              . This will also remove its associated items and cannot be undone.
+            </p>
+
+            {deleteError && (
+              <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                Unable to delete quotation: {deleteError}
+              </p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCancelDelete}
+                disabled={deletingQuotation}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deletingQuotation}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deletingQuotation ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

@@ -21,9 +21,43 @@ const initialForm = {
   valid_until: '',
 }
 
-function QuotationForm({ onSave, onCancel }) {
-  const [form, setForm] = useState(initialForm)
-  const [items, setItems] = useState([createEmptyItem()])
+function getInitialForm(quotation) {
+  if (!quotation) {
+    return initialForm
+  }
+
+  return {
+    quotation_number: quotation.quotation_number ?? '',
+    customer_name: quotation.customer_name ?? '',
+    company_name: quotation.company_name ?? '',
+    email: quotation.email ?? '',
+    phone: quotation.phone ?? '',
+    quotation_date: quotation.quotation_date?.slice(0, 10) ?? '',
+    valid_until: quotation.valid_until?.slice(0, 10) ?? '',
+  }
+}
+
+function getInitialItems(quotation) {
+  if (!quotation?.quotation_items?.length) {
+    return [createEmptyItem()]
+  }
+
+  return quotation.quotation_items.map((item) => ({
+    product_name: item.product_name ?? '',
+    quantity: item.quantity ?? 1,
+    unit_price: item.unit_price ?? 0,
+    discount: item.discount ?? 0,
+  }))
+}
+
+function QuotationForm({
+  initialQuotation,
+  onSave,
+  onCancel,
+  submitLabel = 'Save Quotation',
+}) {
+  const [form, setForm] = useState(() => getInitialForm(initialQuotation))
+  const [items, setItems] = useState(() => getInitialItems(initialQuotation))
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
@@ -572,7 +606,7 @@ function QuotationForm({ onSave, onCancel }) {
           disabled={saving}
           className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {saving ? 'Saving...' : 'Save Quotation'}
+          {saving ? 'Saving...' : submitLabel}
         </button>
       </div>
     </form>

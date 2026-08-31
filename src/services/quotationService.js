@@ -17,10 +17,8 @@ async function getAuthenticatedUser() {
   return user
 }
 
-export async function createQuotation(quotation, items) {
-  const user = await getAuthenticatedUser()
-
-  const quotationPayload = {
+function buildQuotationPayload(quotation) {
+  return {
     quotation_number: quotation.quotation_number,
     customer_name: quotation.customer_name,
     company_name: quotation.company_name,
@@ -31,6 +29,25 @@ export async function createQuotation(quotation, items) {
     subtotal: quotation.subtotal,
     gst: quotation.gst,
     total: quotation.total,
+  }
+}
+
+function buildQuotationItems(quotationId, items) {
+  return items.map((item) => ({
+    quotation_id: quotationId,
+    product_name: item.product_name,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    discount: item.discount,
+    amount: item.amount,
+  }))
+}
+
+export async function createQuotation(quotation, items) {
+  const user = await getAuthenticatedUser()
+
+  const quotationPayload = {
+    ...buildQuotationPayload(quotation),
     user_id: user.id,
   }
 
@@ -44,14 +61,7 @@ export async function createQuotation(quotation, items) {
     throw new Error(quotationError.message)
   }
 
-  const quotationItems = items.map((item) => ({
-    quotation_id: quotationData.id,
-    product_name: item.product_name,
-    quantity: item.quantity,
-    unit_price: item.unit_price,
-    discount: item.discount,
-    amount: item.amount,
-  }))
+  const quotationItems = buildQuotationItems(quotationData.id, items)
 
   const { error: itemsError } = await supabase
     .from('quotation_items')
@@ -65,6 +75,44 @@ export async function createQuotation(quotation, items) {
       .eq('id', quotationData.id)
 
     throw new Error(itemsError.message)
+  }
+
+  return quotationData
+}
+
+export async function updateQuotation(id, quotation, items) {
+  if (!id) {
+    throw new Error('A quotation ID is required to update a quotation.')
+  }
+
+  const user = await getAuthenticatedUser()
+  const { data: quotationData, error: quotationError } = await supabase
+    .from('quotations')
+    .update(buildQuotationPayload(quotation))
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select()
+    .single()
+
+  if (quotationError) {
+    throw new Error(quotationError.message)
+  }
+
+  const { error: deleteItemsError } = await supabase
+    .from('quotation_items')
+    .delete()
+    .eq('quotation_id', id)
+
+  if (deleteItemsError) {
+    throw new Error(deleteItemsError.message)
+  }
+
+  const { error: insertItemsError } = await supabase
+    .from('quotation_items')
+    .insert(buildQuotationItems(id, items))
+
+  if (insertItemsError) {
+    throw new Error(insertItemsError.message)
   }
 
   return quotationData
@@ -106,12 +154,48 @@ export async function getQuotationById(id) {
 }
 
 export async function deleteQuotation(id) {
-  const { error } = await supabase
+  if (!id) {
+    throw new Error('A quotation ID is required to delete a quotation.')
+  }
+
+  const user = await getAuthenticatedUser()
+  const { data: existingQuotation, error: lookupError } = await supabase
+    .from('quotations')
+    .select('id')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (lookupError) {
+    throw new Error(lookupError.message)
+  }
+
+  if (!existingQuotation) {
+    throw new Error('Quotation not found or no longer accessible.')
+  }
+
+  const { error: itemsError } = await supabase
+    .from('quotation_items')
+    .delete()
+    .eq('quotation_id', id)
+
+  if (itemsError) {
+    throw new Error(itemsError.message)
+  }
+
+  const { data, error } = await supabase
     .from('quotations')
     .delete()
     .eq('id', id)
+    .eq('user_id', user.id)
+    .select('id')
+    .maybeSingle()
 
   if (error) {
     throw new Error(error.message)
+  }
+
+  if (!data) {
+    throw new Error('Quotation not found or no longer accessible.')
   }
 }
