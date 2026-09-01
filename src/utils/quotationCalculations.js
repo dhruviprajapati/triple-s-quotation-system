@@ -1,4 +1,6 @@
-export const GST_RATE = 18
+export const GST_OPTIONS = [0, 5, 18, 40]
+
+export const DEFAULT_GST_RATE = 18
 
 export function calculateItemAmount(quantity, unitPrice, discountPercent) {
   const qty = toNonNegativeNumber(quantity)
@@ -26,10 +28,11 @@ export function calculateSubtotal(items = []) {
   )
 }
 
-export function calculateGST(subtotal) {
+export function calculateGST(subtotal, gstRate = DEFAULT_GST_RATE) {
   const safeSubtotal = toNonNegativeNumber(subtotal)
+  const safeGstRate = getValidGstRate(gstRate)
 
-  return roundCurrency(safeSubtotal * (GST_RATE / 100))
+  return roundCurrency(safeSubtotal * (safeGstRate / 100))
 }
 
 export function calculateTotal(subtotal, gst) {
@@ -39,9 +42,12 @@ export function calculateTotal(subtotal, gst) {
   return roundCurrency(safeSubtotal + safeGST)
 }
 
-export function calculateQuotationTotals(items = []) {
+export function calculateQuotationTotals(
+  items = [],
+  gstRate = DEFAULT_GST_RATE,
+) {
   const subtotal = calculateSubtotal(items)
-  const gst = calculateGST(subtotal)
+  const gst = calculateGST(subtotal, gstRate)
   const total = calculateTotal(subtotal, gst)
 
   return {
@@ -49,6 +55,16 @@ export function calculateQuotationTotals(items = []) {
     gst,
     total,
   }
+}
+
+function getValidGstRate(gstRate) {
+  const rate = Number(gstRate)
+
+  if (GST_OPTIONS.includes(rate)) {
+    return rate
+  }
+
+  return DEFAULT_GST_RATE
 }
 
 function toNonNegativeNumber(value) {

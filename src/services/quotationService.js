@@ -27,6 +27,7 @@ function buildQuotationPayload(quotation) {
     quotation_date: quotation.quotation_date,
     valid_until: quotation.valid_until,
     subtotal: quotation.subtotal,
+    gst_rate: quotation.gst_rate,
     gst: quotation.gst,
     total: quotation.total,
   }
@@ -68,7 +69,7 @@ export async function createQuotation(quotation, items) {
     .insert(quotationItems)
 
   if (itemsError) {
-    // Remove the quotation if its items could not be saved.
+    
     await supabase
       .from('quotations')
       .delete()
@@ -86,6 +87,7 @@ export async function updateQuotation(id, quotation, items) {
   }
 
   const user = await getAuthenticatedUser()
+
   const { data: quotationData, error: quotationError } = await supabase
     .from('quotations')
     .update(buildQuotationPayload(quotation))
@@ -125,7 +127,9 @@ export async function getQuotations(userId) {
 
   const { data, error } = await supabase
     .from('quotations')
-    .select('id, quotation_number, customer_name, total, quotation_date')
+    .select(
+      'id, quotation_number, customer_name, company_name, total, quotation_date, gst_rate',
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -159,6 +163,7 @@ export async function deleteQuotation(id) {
   }
 
   const user = await getAuthenticatedUser()
+
   const { data: existingQuotation, error: lookupError } = await supabase
     .from('quotations')
     .select('id')
