@@ -5,7 +5,7 @@ A professional quotation and estimate management application for creating, manag
 ## 🔗 Project
 
 - **GitHub Repository:** https://github.com/dhruviprajapati/triple-s-quotation-system
-- **Live Demo:** Not provided
+- **Live Application:** https://triple-s-quotation-system.vercel.app
 
 ## 🔐 Demo Accounts
 
