@@ -25,7 +25,7 @@ function formatCurrency(amount) {
 }
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth()
+  const { user, logout } = useAuth()
 
   const [quotations, setQuotations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -377,7 +377,7 @@ export default function Dashboard() {
             )}
             <button
               type="button"
-              onClick={signOut}
+              onClick={logout}
               className="group inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 active:scale-95"
             >
               <span>Sign Out</span>
