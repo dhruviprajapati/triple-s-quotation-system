@@ -5,7 +5,7 @@ A professional quotation and estimate management application for creating, manag
 ## 🔗 Project
 
 - **GitHub Repository:** https://github.com/dhruviprajapati/triple-s-quotation-system
-- **Live Demo:** Not provided yet
+- **Live Demo:** Not provided
 
 ## 🔐 Demo Accounts
 
@@ -661,9 +661,3 @@ Potential extensions include:
 Computer Science Engineering | Full Stack Developer
 
 Focused on building practical web applications with React, JavaScript, backend services, databases, authentication, APIs, and modular application architecture.
-
----
-
-# 📄 License
-
-This project is intended for portfolio, educational, and demonstration purposes.
