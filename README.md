@@ -1,6 +1,6 @@
 # ⚡ Triple S Production — Quotation Management System
 
-A professional quotation and estimate management application for creating, managing, calculating, and exporting customer quotations. Built with React, Supabase Authentication, PostgreSQL, Row Level Security (RLS), Tailwind CSS, and jsPDF.
+A professional quotation and estimate management application for creating, managing, calculating, and exporting customer quotations. Built with **React, Supabase Auth, PostgreSQL, Row Level Security (RLS), Tailwind CSS, and jsPDF**.
 
 ## 🔗 Project
 
@@ -9,278 +9,173 @@ A professional quotation and estimate management application for creating, manag
 
 ## 🔐 Demo Accounts
 
-Use either test account to explore the application:
-
 | Email | Password |
 |---|---|
 | `triple-s-demo@yourdomain.com` | `TripleS@Demo2026!` |
 | `aditi@gmail.com` | `Ad@123` |
 
-> These credentials are for testing the application only. Do not use them for real customer data.
+> These credentials are provided for testing the application only.
 
 ---
 
 ## 📌 Overview
 
-Triple S Production manages the quotation workflow from data entry through calculation, review, editing, deletion, printing, and PDF export.
+Triple S Production manages the quotation workflow from data entry to calculation, storage, editing, deletion, printing, and PDF export.
 
-### Core capabilities
+### Core Features
 
 - Secure email/password authentication
 - Protected application routes
 - User-level quotation data isolation
-- Create, read, update, and delete quotations
+- Complete quotation CRUD
 - Multiple line items per quotation
 - Automatic discount and GST calculations
 - Search, filtering, sorting, and pagination
-- Dashboard quotation metrics
+- Dashboard metrics
 - Detailed quotation view
 - Browser printing
 - Branded PDF export
-- PostgreSQL constraints and Row Level Security policies
 
 ---
 
-# ✨ Features
+## 🔄 How It Works
 
-## 1. Authentication & Session Management
+```text
+Login
+  ↓
+Dashboard
+  ↓
+Create Quotation
+  ↓
+Add Items + Quantity + Price + Discount
+  ↓
+Calculate Subtotal + GST
+  ↓
+Save Quotation
+  ↓
+View / Edit / Delete
+  ↓
+Export PDF / Print
+```
 
-Authentication is handled by **Supabase Auth**.
+The application keeps quotation calculations in reusable utility functions and persists quotation data in PostgreSQL.
 
-- Email and password login
+---
+
+# ✨ Key Features
+
+### Authentication
+
+Authentication is handled by **Supabase Auth** with:
+
+- Email/password login
 - Password visibility toggle
-- Form validation
-- Authentication error feedback
-- Protected workspace routes
-- Persistent authentication session
-- Authenticated user information in the navigation area
+- Validation and error feedback
+- Protected routes
+- Persistent sessions
 - Secure sign-out
 
-Unauthenticated users cannot access protected application areas.
+### Quotation Management
 
----
+Users can create quotations containing customer details, quotation dates, GST rates, and multiple products/services.
 
-## 2. Quotation Management
+The quotation workspace supports:
 
-The application supports the complete quotation CRUD lifecycle.
-
-### Create Quotation
-
-A quotation can contain:
-
-- Quotation number
-- Customer name
-- Company name
-- Email
-- Phone number
-- Quotation date
-- Valid-until date
-- Multiple quotation items
-- Product/service name
-- Quantity
-- Unit price
-- Discount percentage
-- GST rate
-
-### View Quotations
-
-The quotation table provides:
-
-- Quotation reference numbers
-- Customer and company information
-- Quotation amounts
-- Date information
+- Create
+- View
+- Edit
+- Delete
 - Search
-- Sorting
+- Sort
 - Date filtering
 - Pagination
-- View, edit, and delete actions
 
-### Edit Quotation
+### Dashboard & Analytics
 
-Existing quotations can be updated without recreating the record. Items can be added or removed and financial values are recalculated automatically.
-
-### Delete Quotation
-
-Deletion is protected by a confirmation modal to reduce accidental destructive actions.
-
-Quotation items reference their parent quotation with `ON DELETE CASCADE`.
-
----
-
-# 💰 Financial Calculation Logic
-
-Financial calculations are implemented in `src/utils/quotationCalculations.js`.
-
-For each line item:
-
-```text
-Gross Amount = Quantity × Unit Price
-
-Discount Amount = Gross Amount × (Discount % / 100)
-
-Net Amount = Gross Amount − Discount Amount
-```
-
-For the quotation:
-
-```text
-Subtotal = Sum of all Net Amounts
-
-GST Amount = Subtotal × (GST Rate / 100)
-
-Grand Total = Subtotal + GST Amount
-```
-
-Supported GST rates:
-
-```text
-0%
-5%
-18%
-40%
-```
-
-Keeping financial logic outside React components makes the calculation rules reusable and easier to maintain.
-
----
-
-# 🔎 Search, Filtering & Analytics
-
-## Search
-
-Search quotations by:
-
-- Quotation number
-- Customer name
-- Company name
-
-## Date Filters
-
-- All Time
-- Today
-- This Week
-- This Month
-
-## Sorting & Pagination
-
-Quotation records can be sorted and displayed through paginated table results.
-
-## Dashboard Metrics
-
-The dashboard summarizes the quotation portfolio with:
+Dashboard metrics include:
 
 - Total Quotations
 - Gross Portfolio Valuation
 - Average Quotation Value
 
+Search supports quotation number, customer name, and company name.
+
+Date presets include **All Time, Today, This Week, and This Month**.
+
+### PDF & Printing
+
+Quotation details can be exported using **jsPDF** or printed through a dedicated print stylesheet.
+
+Generated documents include customer details, quotation metadata, itemized charges, discounts, GST, subtotal, and grand total.
+
 ---
 
-# 📄 PDF Export & Printing
+# 💰 Financial Calculation Logic
 
-Quotation documents can be generated directly from application data.
+Implemented in `src/utils/quotationCalculations.js`.
 
-## PDF Export
+```text
+Gross Amount    = Quantity × Unit Price
+Discount Amount = Gross Amount × (Discount % / 100)
+Net Amount      = Gross Amount − Discount Amount
 
-PDF generation uses **jsPDF** and includes:
+Subtotal        = Sum of Net Amounts
+GST Amount      = Subtotal × (GST Rate / 100)
+Grand Total     = Subtotal + GST Amount
+```
 
-- Company branding
-- Quotation number
-- Customer information
-- Company information
-- Quotation date
-- Valid-until date
-- Itemized products/services
-- Quantity
-- Unit price
-- Discount
-- Subtotal
-- GST
-- Grand total
+Supported GST rates:
 
-## Browser Printing
+**0% · 5% · 18% · 40%**
 
-Dedicated print styles are included for cleaner browser print output.
+Keeping this logic outside the UI components makes the financial rules reusable and easier to maintain.
 
 ---
 
 # 🔐 Security & Data Isolation
 
-The application uses **Supabase PostgreSQL with Row Level Security (RLS)** to enforce quotation ownership at the database layer.
+The application uses **Supabase PostgreSQL Row Level Security (RLS)** to enforce quotation ownership at the database layer.
 
-Each quotation stores the authenticated user's ID:
-
-```sql
-user_id uuid not null references auth.users(id) on delete cascade
-```
-
-RLS policies use `auth.uid()` to ensure users can access only their own quotation records.
-
-### Security flow
+Each quotation is associated with the authenticated user through `user_id`.
 
 ```text
-Authenticated User
-       ↓
- Supabase Auth
-       ↓
-   auth.uid()
-       ↓
- PostgreSQL RLS
-       ↓
- User-owned Quotations
-       ↓
- Quotation Items
+User
+ ↓
+Supabase Auth
+ ↓
+auth.uid()
+ ↓
+PostgreSQL RLS
+ ↓
+User's Quotations
+ ↓
+Quotation Items
 ```
 
-Quotation item policies verify ownership through the parent quotation before allowing access.
+RLS policies ensure users can only access, create, update, or delete quotations belonging to their authenticated account. Quotation item policies verify ownership through the parent quotation.
 
-> The current model provides **user-level data isolation**. It is not organization-level multi-tenancy because quotations are linked directly to individual users rather than an organization/tenant entity.
+> The current implementation provides **user-level data isolation**, rather than organization-level multi-tenancy.
 
 ---
 
-# 🗄️ Database Schema
+# 🗄️ Database Design
 
-The application uses two main relational tables.
+The application uses two related PostgreSQL tables:
 
-## `quotations`
+### `quotations`
 
-```text
-quotations
-├── id
-├── user_id
-├── quotation_number
-├── customer_name
-├── company_name
-├── email
-├── phone
-├── quotation_date
-├── valid_until
-├── subtotal
-├── gst_rate
-├── gst
-├── total
-└── created_at
-```
+Stores customer information, quotation metadata, financial totals, GST rate, and ownership.
 
-## `quotation_items`
+### `quotation_items`
 
-```text
-quotation_items
-├── id
-├── quotation_id
-├── product_name
-├── quantity
-├── unit_price
-├── discount
-└── amount
-```
+Stores individual products/services, quantity, unit price, discount, and calculated amount.
 
 ### Relationship
 
 ```text
 auth.users
     │
-    │ 1
+    │ 1 : N
     ▼
 quotations
     │
@@ -289,31 +184,29 @@ quotations
 quotation_items
 ```
 
-Quotation items reference their parent quotation through a foreign key with cascading deletion.
+`quotation_items.quotation_id` references `quotations.id` with **ON DELETE CASCADE**.
+
+### RLS Setup
+
+Enable RLS on both tables and create policies based on:
+
+```sql
+auth.uid() = quotations.user_id
+```
+
+For quotation items, ownership is checked through the related quotation.
+
+> The complete SQL schema and RLS policies can be recreated from the application's database configuration.
 
 ---
 
 # 🧠 Engineering Highlights
 
-### Database-level authorization
-
-PostgreSQL RLS policies enforce ownership directly in the database rather than relying only on frontend filtering.
-
-### Modular business logic
-
-Financial calculations, filtering, sorting, and PDF generation are separated into reusable utility modules.
-
-### Relational data modelling
-
-Quotation headers and quotation items are stored as related PostgreSQL tables with foreign-key constraints.
-
-### Service layer
-
-Authentication and quotation database operations are separated into dedicated service modules.
-
-### Reusable React components
-
-Major application areas are separated into focused components for the dashboard, quotation form, quotation table, filters, details, login, and delete confirmation.
+- **Database-level authorization:** PostgreSQL RLS enforces ownership instead of relying only on frontend filtering.
+- **Modular business logic:** Financial calculations, filtering, sorting, and PDF generation are separated into utility modules.
+- **Relational data modelling:** Quotations and line items use PostgreSQL foreign-key relationships.
+- **Service layer:** Authentication and quotation database operations are isolated in dedicated service modules.
+- **Component-based UI:** Dashboard, forms, filters, table, details, login, and confirmation modal are separated into focused React components.
 
 ---
 
@@ -321,16 +214,15 @@ Major application areas are separated into focused components for the dashboard,
 
 | Layer | Technology |
 |---|---|
-| Frontend Framework | React.js |
-| Build Tool | Vite |
+| Frontend | React.js + Vite |
 | Styling | Tailwind CSS |
 | Authentication | Supabase Auth |
 | Database | PostgreSQL |
-| Database Security | PostgreSQL Row Level Security (RLS) |
+| Security | PostgreSQL Row Level Security |
 | Backend Platform | Supabase |
 | PDF Generation | jsPDF |
 | Deployment | Vercel |
-| Version Control | Git & GitHub |
+| Version Control | Git + GitHub |
 
 ---
 
@@ -338,9 +230,7 @@ Major application areas are separated into focused components for the dashboard,
 
 ```text
 triple-s-quotation-system/
-│
 ├── public/
-│
 ├── src/
 │   ├── components/
 │   │   ├── Dashboard.jsx
@@ -350,28 +240,22 @@ triple-s-quotation-system/
 │   │   ├── QuotationFilters.jsx
 │   │   ├── QuotationForm.jsx
 │   │   └── QuotationTable.jsx
-│   │
 │   ├── context/
 │   │   ├── AuthContext.jsx
 │   │   └── useAuth.js
-│   │
 │   ├── lib/
 │   │   └── supabaseClient.js
-│   │
 │   ├── services/
 │   │   ├── authService.js
 │   │   └── quotationService.js
-│   │
 │   ├── utils/
 │   │   ├── generateQuotationPdf.js
 │   │   ├── quotationCalculations.js
 │   │   └── quotationUtils.js
-│   │
 │   ├── App.css
 │   ├── App.jsx
 │   ├── index.css
 │   └── main.jsx
-│
 ├── .env.example
 ├── .gitignore
 ├── package.json
@@ -382,41 +266,41 @@ triple-s-quotation-system/
 
 # ⚙️ Local Setup
 
-## 1. Clone the repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/dhruviprajapati/triple-s-quotation-system.git
 cd triple-s-quotation-system
 ```
 
-## 2. Install dependencies
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-## 3. Configure environment variables
+### 3. Configure environment variables
 
-Create a `.env.local` file in the project root:
+Create `.env.local`:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-Do not commit `.env.local` or private credentials to GitHub.
+Do not commit `.env.local` or private credentials.
 
-## 4. Configure Supabase
+### 4. Configure Supabase
 
-Create a Supabase project, configure authentication, and create the database tables and RLS policies described below.
+Create a Supabase project, enable email/password authentication, create the `quotations` and `quotation_items` tables, and enable the RLS policies described above.
 
-## 5. Run the development server
+### 5. Start the application
 
 ```bash
 npm run dev
 ```
 
-Vite will normally start the application at:
+The development server normally runs at:
 
 ```text
 http://localhost:5173
@@ -424,220 +308,19 @@ http://localhost:5173
 
 ---
 
-# 🗃️ Supabase Database Setup
-
-Open the **SQL Editor** in your Supabase project.
-
-## Create tables
-
-```sql
-create table public.quotations (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  quotation_number text not null,
-  customer_name text not null,
-  company_name text not null,
-  email text not null,
-  phone text not null,
-  quotation_date date not null,
-  valid_until date not null,
-  subtotal numeric(12, 2) not null default 0,
-  gst_rate numeric(5, 2) not null default 18
-    check (gst_rate in (0, 5, 18, 40)),
-  gst numeric(12, 2) not null default 0,
-  total numeric(12, 2) not null default 0,
-  created_at timestamptz not null default now()
-);
-
-create table public.quotation_items (
-  id uuid primary key default gen_random_uuid(),
-  quotation_id uuid not null
-    references public.quotations(id)
-    on delete cascade,
-  product_name text not null,
-  quantity numeric(12, 2) not null
-    check (quantity > 0),
-  unit_price numeric(12, 2) not null
-    check (unit_price >= 0),
-  discount numeric(5, 2) not null default 0
-    check (discount >= 0 and discount <= 100),
-  amount numeric(12, 2) not null default 0
-);
-```
-
-## Enable Row Level Security
-
-```sql
-alter table public.quotations enable row level security;
-alter table public.quotation_items enable row level security;
-```
-
-## Grants
-
-```sql
-grant usage on schema public to authenticated;
-
-grant select, insert, update, delete
-on table public.quotations
-to authenticated;
-
-grant select, insert, update, delete
-on table public.quotation_items
-to authenticated;
-```
-
-## Quotation RLS policies
-
-```sql
-create policy "Users can view their own quotations"
-on public.quotations
-for select
-to authenticated
-using ((select auth.uid()) = user_id);
-
-create policy "Users can create their own quotations"
-on public.quotations
-for insert
-to authenticated
-with check ((select auth.uid()) = user_id);
-
-create policy "Users can update their own quotations"
-on public.quotations
-for update
-to authenticated
-using ((select auth.uid()) = user_id)
-with check ((select auth.uid()) = user_id);
-
-create policy "Users can delete their own quotations"
-on public.quotations
-for delete
-to authenticated
-using ((select auth.uid()) = user_id);
-```
-
-## Quotation item RLS policies
-
-```sql
-create policy "Users can view items from their quotations"
-on public.quotation_items
-for select
-to authenticated
-using (
-  exists (
-    select 1
-    from public.quotations
-    where quotations.id = quotation_items.quotation_id
-      and quotations.user_id = (select auth.uid())
-  )
-);
-
-create policy "Users can create items for their quotations"
-on public.quotation_items
-for insert
-to authenticated
-with check (
-  exists (
-    select 1
-    from public.quotations
-    where quotations.id = quotation_items.quotation_id
-      and quotations.user_id = (select auth.uid())
-  )
-);
-
-create policy "Users can update items from their quotations"
-on public.quotation_items
-for update
-to authenticated
-using (
-  exists (
-    select 1
-    from public.quotations
-    where quotations.id = quotation_items.quotation_id
-      and quotations.user_id = (select auth.uid())
-  )
-)
-with check (
-  exists (
-    select 1
-    from public.quotations
-    where quotations.id = quotation_items.quotation_id
-      and quotations.user_id = (select auth.uid())
-  )
-);
-
-create policy "Users can delete items from their quotations"
-on public.quotation_items
-for delete
-to authenticated
-using (
-  exists (
-    select 1
-    from public.quotations
-    where quotations.id = quotation_items.quotation_id
-      and quotations.user_id = (select auth.uid())
-  )
-);
-```
-
----
-
-# 🏗️ Application Architecture
-
-```text
-React Application
-       │
-       ├── Components
-       │     ├── Dashboard
-       │     ├── Login
-       │     ├── Quotation Form
-       │     ├── Quotation Table
-       │     ├── Quotation Filters
-       │     └── Quotation Details
-       │
-       ├── Context
-       │     └── Authentication State
-       │
-       ├── Services
-       │     ├── Authentication
-       │     └── Quotation CRUD
-       │
-       └── Utilities
-             ├── Financial Calculations
-             ├── Search / Filter / Sort
-             └── PDF Generation
-                    │
-                    ▼
-                Supabase
-                    │
-              ┌─────┴─────┐
-              ▼           ▼
-        Supabase Auth  PostgreSQL
-                           │
-                           ▼
-                          RLS
-```
-
----
-
 # 🔒 Security Notes
 
-The project uses:
-
-- Supabase Auth for authentication
-- PostgreSQL RLS for user-level authorization
-- Foreign-key constraints for relational integrity
-- Cascading deletes for dependent quotation items
-- Protected frontend routes
-- Environment variables for Supabase configuration
-- Database-level ownership checks rather than frontend filtering alone
-
-> Never expose a Supabase service-role key in the frontend. The browser application should use only the public client configuration intended for RLS-protected access.
+- Supabase Auth handles authentication.
+- PostgreSQL RLS handles user-level authorization.
+- Foreign keys maintain relational integrity.
+- `ON DELETE CASCADE` removes dependent quotation items when a quotation is deleted.
+- Protected frontend routes prevent unauthenticated workspace access.
+- Supabase configuration is supplied through environment variables.
+- A Supabase service-role key must never be exposed in the frontend.
 
 ---
 
 # 🚧 Future Improvements
-
-Potential extensions include:
 
 - Organization-level multi-tenancy
 - Role-based permissions
@@ -650,7 +333,7 @@ Potential extensions include:
 - Server-side PDF generation
 - Quotation expiry notifications
 - Automated testing
-- Advanced reporting and analytics
+- Advanced reporting
 
 ---
 
@@ -659,5 +342,3 @@ Potential extensions include:
 **Dhruvi Prajapati**
 
 Computer Science Engineering | Full Stack Developer
-
-Focused on building practical web applications with React, JavaScript, backend services, databases, authentication, APIs, and modular application architecture.
